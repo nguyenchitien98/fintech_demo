@@ -12,23 +12,41 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  X,
+  Layers,
+  ArrowDownLeft,
+  ArrowUpRight
 } from "lucide-react";
+
+interface Transaction {
+  id: string;
+  fromWallet: string;
+  toWallet: string;
+  amount: string;
+  status: string;
+  channel: string;
+  description: string;
+  createdAt: string;
+}
 
 /**
  * Trang Lịch sử Giao dịch và Kiểm toán Sổ cái (2 Tabs).
- * - Tab 1: Lịch sử giao dịch (Transaction History) - Tổng quan luồng tiền gửi/nhận và trạng thái.
- * - Tab 2: Kiểm toán sổ cái (Ledger Explorer) - Đối soát Nợ/Có cân bằng theo nguyên tắc Double-entry.
+ * - Tab 1: Lịch sử giao dịch (Transaction History) - Nhấp vào ID để xem Sơ đồ Processing Timeline.
+ * - Tab 2: Kiểm toán sổ cái (Ledger Explorer) - Đối soát Nợ/Có.
  */
 export default function TransactionsHistoryPage() {
   const [activeTab, setActiveTab] = useState<"history" | "ledger">("history");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
-  const [filterType, setFilterType] = useState("ALL"); // Chỉ dùng cho Ledger
+  const [filterType, setFilterType] = useState("ALL"); 
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Trạng thái mở modal chi tiết giao dịch
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   // 1. Mock dữ liệu Lịch sử giao dịch (Transaction History)
-  const mockTransactions = [
+  const mockTransactions: Transaction[] = [
     { id: "TXN-662189", fromWallet: "Ví chính (ID: 1)", toWallet: "Ví tiết kiệm (ID: 2)", amount: "2,000,000", status: "SUCCESS", channel: "FinWallet Lõi", description: "Chuyển tiền tiết kiệm tháng 7", createdAt: "2026-07-29 14:30:22" },
     { id: "TXN-662188", fromWallet: "Cổng thanh toán (ID: 5)", toWallet: "Ví chính (ID: 1)", amount: "5,000,000", status: "SUCCESS", channel: "Bank Gateway", description: "Nạp tiền từ ngân hàng liên kết", createdAt: "2026-07-29 14:15:10" },
     { id: "TXN-662187", fromWallet: "Ví tiết kiệm (ID: 2)", toWallet: "Ví chính (ID: 1)", amount: "1,200,000", status: "SUCCESS", channel: "FinWallet Lõi", description: "Rút tiền chi tiêu khẩn cấp", createdAt: "2026-07-29 13:50:33" },
@@ -69,6 +87,18 @@ export default function TransactionsHistoryPage() {
     const matchesType = filterType === "ALL" || entry.type === filterType;
     return matchesSearch && matchesType;
   });
+
+  // Sơ đồ Processing Timeline giả lập cho selected transaction
+  const processingTimeline = [
+    { title: "API Gateway", description: "Tiếp nhận request, kiểm tra JWT Blacklist & giới hạn Rate limit IP Client", time: "14:30:22.001" },
+    { title: "Wallet Service (Validation)", description: "Xác minh số dư khả dụng của ví gửi và kiểm soát ví không đóng băng", time: "14:30:22.012" },
+    { title: "Redis Idempotency Check", description: "Xác minh key kháng lặp X-Idempotency-Key thành công ➔ Tạo khóa tạm", time: "14:30:22.025" },
+    { title: "PostgreSQL (Ledger Write)", description: "Thực thi ghi sổ bút toán kép (1 DEBIT ví gửi, 1 CREDIT ví nhận) trong DB transaction", time: "14:30:22.044" },
+    { title: "Outbox Publisher", description: "Lưu bản ghi OutboxEvent trạng thái PENDING thành công trong cùng transaction", time: "14:30:22.045" },
+    { title: "Kafka Broker (transaction-events)", description: "Scheduler quét OutboxPoller đẩy gói tin JSON thành công sang topic Kafka", time: "14:30:22.112" },
+    { title: "Notification Service", description: "Kafka Consumer tiêu thụ message và truyền phát Server-Sent Events (SSE)", time: "14:30:22.135" },
+    { title: "Completed", description: "Client nhận SSE Toast hiển thị thông báo biến động số dư ➔ Hoàn tất quy trình", time: "14:30:22.140" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -180,7 +210,12 @@ export default function TransactionsHistoryPage() {
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-slate-850/20 transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs text-blue-500 hover:underline cursor-pointer font-bold">{tx.id}</td>
+                      <td 
+                        onClick={() => setSelectedTx(tx)}
+                        className="px-6 py-4 font-mono text-xs text-blue-500 hover:underline cursor-pointer font-bold"
+                      >
+                        {tx.id}
+                      </td>
                       <td className="px-6 py-4 text-slate-200 font-medium">{tx.fromWallet}</td>
                       <td className="px-2 py-4 text-slate-500 text-center"><ArrowRight className="w-4 h-4 inline" /></td>
                       <td className="px-6 py-4 text-slate-200 font-medium">{tx.toWallet}</td>
@@ -239,7 +274,15 @@ export default function TransactionsHistoryPage() {
                   filteredLedgerEntries.map((entry) => (
                     <tr key={entry.id} className="hover:bg-slate-850/20 transition-colors">
                       <td className="px-6 py-4 font-mono text-xs text-slate-300 font-semibold">{entry.id}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-blue-500 hover:underline cursor-pointer">{entry.txId}</td>
+                      <td 
+                        onClick={() => {
+                          const txObj = mockTransactions.find(t => t.id === entry.txId);
+                          if (txObj) setSelectedTx(txObj);
+                        }}
+                        className="px-6 py-4 font-mono text-xs text-blue-500 hover:underline cursor-pointer"
+                      >
+                        {entry.txId}
+                      </td>
                       <td className="px-6 py-4 text-slate-200 font-medium">{entry.walletName}</td>
                       <td className={`px-6 py-4 text-right font-semibold ${
                         entry.debit !== "-" ? "text-red-500" : "text-slate-500"
@@ -287,7 +330,7 @@ export default function TransactionsHistoryPage() {
             </button>
             <span className="text-xs text-slate-350 font-semibold px-2">Trang {currentPage}</span>
             <button 
-              disabled={true} // Chỉ có 1 trang mock
+              disabled={true} 
               className="p-2 border border-slate-800 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-slate-100 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
@@ -295,6 +338,105 @@ export default function TransactionsHistoryPage() {
           </div>
         </div>
       </div>
+
+      {/* TRANSACTION DETAILS MODAL & PROCESSING TIMELINE */}
+      {selectedTx && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-100 flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-blue-500" />
+                <span>Chi tiết Tiến trình Giao dịch</span>
+              </h3>
+              <button 
+                onClick={() => setSelectedTx(null)}
+                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-150 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 flex-1">
+              {/* Định danh sâu (Deep Identifiers) */}
+              <div className="bg-slate-950 border border-slate-850 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="space-y-1">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider">Transaction ID</span>
+                  <span className="block font-mono text-slate-200 font-bold">{selectedTx.id}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider">Idempotency Key</span>
+                  <span className="block font-mono text-slate-200 truncate">
+                    {selectedTx.id === "TXN-662189" ? "7b539c3e-862a-4c28-97f3-e5d4c89280b1" : "c8f2b3e4-862a-4122-bc54-12948e9f80b1"}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider">Kafka Event ID</span>
+                  <span className="block font-mono text-slate-200 font-semibold">evt_9a7f3e82d5b6a1c8</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider">Ledger ID (Debit/Credit)</span>
+                  <span className="block font-mono text-slate-200">
+                    LED-772882 (Nợ) / LED-772881 (Có)
+                  </span>
+                </div>
+              </div>
+
+              {/* Tóm tắt dòng tiền */}
+              <div className="flex justify-between items-center bg-slate-950/40 border border-slate-850 p-4 rounded-xl text-sm">
+                <div className="space-y-1">
+                  <span className="text-xxs font-bold text-slate-500 uppercase tracking-wider">Ví gửi</span>
+                  <div className="text-slate-200 font-semibold">{selectedTx.fromWallet}</div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs font-extrabold text-emerald-500">{selectedTx.amount} VND</span>
+                  <div className="h-0.5 w-16 bg-slate-800 relative my-1">
+                    <ArrowRight className="w-3 h-3 absolute right-0 -top-1.5 text-slate-650" />
+                  </div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <span className="text-xxs font-bold text-slate-500 uppercase tracking-wider">Ví nhận</span>
+                  <div className="text-slate-200 font-semibold">{selectedTx.toWallet}</div>
+                </div>
+              </div>
+
+              {/* Sơ đồ Processing Timeline */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Luồng đi của dữ liệu thời gian thực</h4>
+                
+                <div className="relative border-l-2 border-emerald-500/25 ml-3 pl-6 space-y-6">
+                  {processingTimeline.map((step, idx) => (
+                    <div key={idx} className="relative">
+                      {/* Vòng tròn sáng tích xanh lá cây */}
+                      <span className="absolute -left-[31px] top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-950 border border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                      </span>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1 max-w-[80%]">
+                          <span className="text-xs font-bold text-slate-100">{step.title}</span>
+                          <p className="text-xxs text-slate-450 leading-relaxed">{step.description}</p>
+                        </div>
+                        <span className="text-xxs font-mono text-slate-500 font-semibold">{step.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-800 flex justify-end">
+              <button 
+                onClick={() => setSelectedTx(null)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-slate-200 rounded-lg transition-colors"
+              >
+                Đóng chi tiết
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

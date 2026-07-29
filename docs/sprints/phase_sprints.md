@@ -83,13 +83,13 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Xây dựng dịch vụ thông báo lắng nghe Kafka, đẩy thông tin về Client qua Server-Sent Events và hiển thị chi tiết tiến trình giao dịch.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Phát triển dịch vụ `notification-service` làm Kafka Consumer tiêu thụ sự kiện từ topic `transaction-events`.
-        - [ ] Cung cấp API endpoint Server-Sent Events (SSE) `/api/v1/notifications/stream` để đẩy thông báo biến động số dư tức thời về client.
+        - [x] Phát triển dịch vụ `notification-service` làm Kafka Consumer tiêu thụ sự kiện từ topic `transaction-events`.
+        - [x] Cung cấp API endpoint Server-Sent Events (SSE) `/api/v1/notifications/stream` để đẩy thông báo biến động số dư tức thời về client.
     - **Frontend (UI)**:
-        - [ ] Cài đặt kết nối SSE tại Frontend để hiển thị popup thông báo biến động số dư thời gian thực ở góc phải màn hình.
-        - [ ] Thiết kế màn hình **Chi tiết giao dịch (Transaction Detail)**:
-            - Hiển thị các ID định danh sâu: Transaction ID, Idempotency Key, Kafka Event ID, Ledger ID (Debit/Credit).
-            - Trực quan hóa sơ đồ cây **Processing Timeline** hiển thị luồng đi của dữ liệu qua các dịch vụ theo thời gian thực (API Gateway ➔ Wallet Service ➔ Redis Idempotency ➔ PostgreSQL Ledger ➔ Outbox Publisher ➔ Kafka Broker ➔ Notification Service ➔ Completed) với các dấu tích xanh và mốc thời gian chi tiết.
+        - [x] Cài đặt kết nối SSE tại Frontend để hiển thị popup thông báo biến động số dư thời gian thực ở góc phải màn hình.
+        - [x] Thiết kế màn hình **Chi tiết giao dịch (Transaction Detail)**:
+            - [x] Hiển thị các ID định danh sâu: Transaction ID, Idempotency Key, Kafka Event ID, Ledger ID (Debit/Credit).
+            - [x] Trực quan hóa sơ đồ cây **Processing Timeline** hiển thị luồng đi của dữ liệu qua các dịch vụ theo thời gian thực (API Gateway ➔ Wallet Service ➔ Redis Idempotency ➔ PostgreSQL Ledger ➔ Outbox Publisher ➔ Kafka Broker ➔ Notification Service ➔ Completed) với các dấu tích xanh và mốc thời gian chi tiết.
 
 ---
 
