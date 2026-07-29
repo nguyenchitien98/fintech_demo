@@ -53,14 +53,14 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Bảo mật Gateway, giới hạn tần suất gọi API và thiết lập bộ lọc kháng lặp giao dịch tự động.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Cấu hình Spring Cloud Gateway chặn JWT, giải mã thông tin user và đẩy vào Header `X-User-Email` cho các dịch vụ Wallet.
-        - [ ] Cấu hình Rate Limiter dùng thuật toán Token Bucket lưu trên Redis tại Gateway.
-        - [ ] Lập trình Custom Annotation `@Idempotent` cùng Aspect `IdempotentAspect` trong `common-library` kiểm tra và chống gửi trùng yêu cầu giao dịch trong 30 giây qua Redis dựa trên header `X-Idempotency-Key`.
+        - [x] Cấu hình Spring Cloud Gateway chặn JWT, giải mã thông tin user và đẩy vào Header `X-User-Email` cho các dịch vụ Wallet.
+        - [x] Cấu hình Rate Limiter dùng thuật toán Token Bucket lưu trên Redis tại Gateway.
+        - [x] Lập trình Custom Annotation `@Idempotent` cùng Aspect `IdempotentAspect` trong `common-library` kiểm tra và chống gửi trùng yêu cầu giao dịch trong 30 giây qua Redis dựa trên header `X-Idempotency-Key`.
     - **Frontend (UI)**:
-        - [ ] Thiết kế trang **Chuyển tiền (Transfer Money)**:
-            - Form nhập thông tin ví gửi, người nhận, số tiền, nội dung.
-            - Nút bật tắt (Toggle Switch) cho tùy chọn *"Use Idempotency Key"*. Khi bật, tự động sinh chuỗi UUID v4 hiển thị trong ô text readonly và đính kèm vào header request.
-            - Cột **Transfer Summary** hiển thị: Phí (Fee), Thuế (Tax), Tổng cộng (Total), Thời gian xử lý dự kiến và Số dư sau giao dịch (Balance After).
+        - [x] Thiết kế trang **Chuyển tiền (Transfer Money)**:
+            - [x] Form nhập thông tin ví gửi, người nhận, số tiền, nội dung.
+            - [x] Nút bật tắt (Toggle Switch) cho tùy chọn *"Use Idempotency Key"*. Khi bật, tự động sinh chuỗi UUID v4 hiển thị trong ô text readonly và đính kèm vào header request.
+            - [x] Cột **Transfer Summary** hiển thị: Phí (Fee), Thuế (Tax), Tổng cộng (Total), Thời gian xử lý dự kiến và Số dư sau giao dịch (Balance After).
 
 ---
 

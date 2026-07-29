@@ -30,6 +30,7 @@
         <module>services/common-library</module>
         <module>services/auth-service</module>
         <module>services/wallet-service</module>
+        <module>services/gateway-service</module>
     </modules>
 
     <dependencyManagement>

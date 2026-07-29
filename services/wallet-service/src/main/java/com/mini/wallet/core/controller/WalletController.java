@@ -1,6 +1,7 @@
 package com.mini.wallet.core.controller;
 
 import com.mini.wallet.common.dto.ApiResponse;
+import com.mini.wallet.common.idempotent.Idempotent;
 import com.mini.wallet.core.dto.TransferRequestDto;
 import com.mini.wallet.core.dto.TransferResponseDto;
 import com.mini.wallet.core.dto.WalletCreateDto;
@@ -47,10 +48,13 @@ public class WalletController {
      * API thực hiện chuyển tiền trực tiếp giữa hai ví điện tử (Direct Money Transfer).
      * Áp dụng khóa bi quan chống race condition và ghi sổ cái kép.
      *
+     * <p><strong>Tại sao sử dụng @Idempotent:</strong> Chặn lặp giao dịch dựa trên header X-Idempotency-Key.
+     *
      * @param request DTO yêu cầu chuyển khoản (fromId, toId, amount).
      * @return ApiResponse bọc đối tượng TransferResponseDto giao dịch thành công.
      */
     @PostMapping("/transfer")
+    @Idempotent(keyPrefix = "idempotent:transfer:")
     public ApiResponse<TransferResponseDto> transfer(@Valid @RequestBody TransferRequestDto request) {
         TransferResponseDto response = walletService.transferMoney(request);
         return ApiResponse.success("Giao dịch chuyển tiền thành công", response);

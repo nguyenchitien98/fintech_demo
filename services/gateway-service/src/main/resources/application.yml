@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+  threads:
+    virtual:
+      enabled: true
+
+  # Cấu hình Redis kết nối (phục vụ bộ lọc Rate Limiter & Blacklist)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # Cấu hình Spring Cloud Gateway định tuyến
+  cloud:
+    gateway:
+      routes:
+        # 1. Định tuyến sang auth-service
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            # Áp dụng bộ lọc bảo mật JWT
+            - name: JwtAuthFilter
+            # Giới hạn tần suất gọi API
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+
+        # 2. Định tuyến sang wallet-service
+        - id: wallet-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/v1/wallets/**, /api/v1/ledger-entries/**
+          filters:
+            # Áp dụng bộ lọc bảo mật JWT
+            - name: JwtAuthFilter
+            # Giới hạn tần suất gọi API
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
