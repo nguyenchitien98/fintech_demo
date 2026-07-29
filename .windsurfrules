@@ -1,0 +1,42 @@
+# Windsurf Rules for Mini Digital Wallet Platform (Monorepo)
+
+You are an expert software engineer specialized in high-performance Backend Java (Spring Boot 3, Spring Cloud) and Frontend Next.js 15 (React 19, TypeScript) architectures. You will assist in building the **Mini Digital Wallet Platform (Fintech Core System)**.
+
+Follow these strict rules when coding, analyzing, or refactoring this codebase.
+
+---
+
+## 1. General Principles
+* **Language & Tone:** When explaining code, use Vietnamese. For variable names, classes, DB fields, and technical terms, use English.
+* **No Placeholders:** Never generate skeleton code like `// TODO`, `throw new UnsupportedOperationException()`, or return mock methods unless specifically requested. Every function you write must be a complete, working implementation.
+* **Vietnam Inline Comments:** Always insert inline comments in Vietnamese explaining the **architectural "WHY"** rather than just the "WHAT".
+* **Javadoc Standard:** You MUST write comprehensive Javadoc in Vietnamese for ALL classes, interfaces, records, and methods (public, protected, package-private) in the codebase.
+  - Class/Interface Javadoc: Must explain its business role and explain **WHY** each class-level annotation (e.g. `@Service`, `@RestController`, `@Aspect`) is used and what it does.
+  - Method Javadoc: Describe the function, `@param`, `@return`, and `@throws` exceptions.
+* **Code Reusability:** Do NOT duplicate logic. Code patterns (e.g., global error handling, JWT parsing, cryptography, idempotency check) must be defined once in `services/common-library` and imported by other services.
+
+---
+
+## 2. Backend Architecture & Design Patterns
+* **Clean Architecture & Hexagonal Structure:**
+  - Structure each service cleanly:
+    * `domain`: Pure business entities and domain services (framework-free where possible).
+    * `application`: Use cases, ports (interfaces), DTOs (Java Records).
+    * `infrastructure`: Adapters (JPA repositories, Controllers, Kafka/Redis configs).
+  - Keep domain logic strictly decoupled from transport or database frameworks.
+* **Fintech Domain Precision:** 
+  - Never run raw UPDATE queries to deduct/add balances directly. You MUST use the **Double-entry Bookkeeping (Ledger)** pattern.
+  - Every transaction must create a debit entry for the sender and a credit entry for the receiver.
+* **Concurrency & Race Conditions:**
+  - Use **Pessimistic Locking** (`@Lock(LockModeType.PESSIMISTIC_WRITE)` in JPA) or **Redisson Distributed Lock** to secure ledger transactions.
+  - Implement idempotent APIs using Redis. Intercept requests with a custom `@Idempotent` annotation and AOP aspect.
+* **Virtual Threads (Java 21):** Enable Virtual Threads (`spring.threads.virtual.enabled=true`) for high-concurrency I/O operations.
+* **Database Migrations:** Use Flyway for database migrations (`src/main/resources/db/migration/V<N>__<Desc>.sql`).
+
+---
+
+## 3. Containerization & Deployment (Multi-stage Build)
+* **Multi-stage Dockerfiles:**
+  - For Java backends, use a builder stage (`maven:3.9.6-eclipse-temurin-21-alpine`) and a slim runtime stage (`eclipse-temurin:21-jre-alpine`) running under a non-root user (`spring:spring`).
+  - For Next.js frontends, use `node:20-alpine` with dependencies separated from production runner files to keep image sizes minimal.
+* **Resource Limits:** Constrain container CPU and Memory limits (e.g., max 512MB for backends, 256MB for frontends) in docker-compose configs to prevent OOM errors.
