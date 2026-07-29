@@ -1,0 +1,43 @@
+# Target folders (Maven build)
+**/target/
+target/
+
+# Node dependencies and build folders
+**/node_modules/
+node_modules/
+**/.next/
+.next/
+**/out/
+out/
+**/build/
+build/
+
+# IDE files (IntelliJ IDEA, Eclipse, VS Code)
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.metadata/
+.factorypath
+bin/
+dependency-reduced-pom.xml
+.vscode/
+
+# Logs and databases
+*.log
+*.sqlite
+.h2.db
+**/db/*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Local environment variables
+.env*.local
+.env

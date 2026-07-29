@@ -31,6 +31,9 @@ public enum ErrorCode {
     /** Ví điện tử đang bị khóa hoặc đóng băng */
     WALLET_FROZEN(HttpStatus.BAD_REQUEST, "Ví điện tử này hiện đang bị đóng băng và không thể thực hiện giao dịch"),
 
+    /** Lỗi số dư tài khoản không đủ */
+    INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "Số dư tài khoản không đủ để thực hiện giao dịch"),
+
     /** Đụng độ khóa kháng lặp giao dịch (Idempotency Key Conflict) */
     IDEMPOTENT_KEY_CONFLICT(HttpStatus.CONFLICT, "Giao dịch đang được xử lý hoặc đã hoàn tất trước đó với khóa kháng lặp này"),
 

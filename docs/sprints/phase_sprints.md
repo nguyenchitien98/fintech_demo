@@ -26,12 +26,12 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Xây dựng nghiệp vụ chuyển tiền áp dụng Sổ kế toán kép (Double-entry Ledger) bảo toàn dữ liệu và cơ chế chống rút tiền âm.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Thiết lập thực thể `Transaction` và `LedgerEntry` (bút toán ghi Nợ/Có).
-        - [ ] Lập trình logic chuyển tiền trong một Transaction Database: Khóa bản ghi ví gửi và nhận bằng Pessimistic Lock (`SELECT ... FOR UPDATE`), tạo bản ghi giao dịch `PENDING`, sau đó ghi nhận 1 dòng DEBIT cho ví gửi và 1 dòng CREDIT cho ví nhận.
-        - [ ] Viết API Ledger Explorer (`/api/v1/ledger-entries`) hỗ trợ phân trang, tìm kiếm và đối soát số dư ví.
-        - [ ] Viết bài Integration Test giả lập 100 Virtual Threads chuyển tiền đồng thời để kiểm chứng tài khoản không bị âm hoặc trừ tiền sai lệch (Race Condition).
+        - [x] Thiết lập thực thể `Transaction` và `LedgerEntry` (bút toán ghi Nợ/Có).
+        - [x] Lập trình logic chuyển tiền trong một Transaction Database: Khóa bản ghi ví gửi và nhận bằng Pessimistic Lock (`SELECT ... FOR UPDATE`), tạo bản ghi giao dịch `PENDING`, sau đó ghi nhận 1 dòng DEBIT cho ví gửi và 1 dòng CREDIT cho ví nhận.
+        - [x] Viết API Ledger Explorer (`/api/v1/ledger-entries`) hỗ trợ phân trang, tìm kiếm và đối soát số dư ví.
+        - [x] Viết bài Integration Test giả lập 100 Virtual Threads chuyển tiền đồng thời để kiểm chứng tài khoản không bị âm hoặc trừ tiền sai lệch (Race Condition).
     - **Frontend (UI)**:
-        - [ ] Thiết kế màn hình **Ledger Explorer**: Hiển thị bảng chi tiết các bút toán Nợ/Có, trong đó cột `Debit` hiển thị số tiền âm màu Đỏ (ví dụ: `-2,000,000 VND`), cột `Credit` hiển thị số tiền dương màu Xanh lá (ví dụ: `+2,000,000 VND`).
+        - [x] Thiết kế màn hình **Ledger Explorer**: Hiển thị bảng chi tiết các bút toán Nợ/Có, trong đó cột `Debit` hiển thị số tiền âm màu Đỏ (ví dụ: `-2,000,000 VND`), cột `Credit` hiển thị số tiền dương màu Xanh lá (ví dụ: `+2,000,000 VND`).
 
 ---
 

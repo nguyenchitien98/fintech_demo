@@ -1,6 +1,8 @@
 package com.mini.wallet.core.controller;
 
 import com.mini.wallet.common.dto.ApiResponse;
+import com.mini.wallet.core.dto.TransferRequestDto;
+import com.mini.wallet.core.dto.TransferResponseDto;
 import com.mini.wallet.core.dto.WalletCreateDto;
 import com.mini.wallet.core.dto.WalletResponseDto;
 import com.mini.wallet.core.service.WalletService;
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Controller tiếp nhận các yêu cầu liên quan tới Ví điện tử (WalletController).
+ * Controller tiếp nhận các yêu cầu liên quan tới Ví điện tử và Giao dịch (WalletController).
  *
  * <p><strong>Tại sao sử dụng các annotation:</strong>
  * <ul>
@@ -39,6 +41,19 @@ public class WalletController {
      */
     public WalletController(WalletService walletService) {
         this.walletService = walletService;
+    }
+
+    /**
+     * API thực hiện chuyển tiền trực tiếp giữa hai ví điện tử (Direct Money Transfer).
+     * Áp dụng khóa bi quan chống race condition và ghi sổ cái kép.
+     *
+     * @param request DTO yêu cầu chuyển khoản (fromId, toId, amount).
+     * @return ApiResponse bọc đối tượng TransferResponseDto giao dịch thành công.
+     */
+    @PostMapping("/transfer")
+    public ApiResponse<TransferResponseDto> transfer(@Valid @RequestBody TransferRequestDto request) {
+        TransferResponseDto response = walletService.transferMoney(request);
+        return ApiResponse.success("Giao dịch chuyển tiền thành công", response);
     }
 
     /**
