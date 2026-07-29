@@ -113,12 +113,12 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Xây dựng bộ giả lập tải/lỗi hệ thống để demo khả năng chịu tải, giao diện Admin quản trị và đóng gói Docker Compose sản xuất.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Viết API giả lập Race Condition: Tiếp nhận số lượng Thread (ví dụ: 10, 50, 100) và số tiền chuyển để bắn đồng thời nhiều luồng gọi API chuyển khoản.
-        - [ ] Viết API Chaos Simulator: Ngắt kết nối tạm thời Redis/Kafka/Notification để kiểm thử khả năng chịu lỗi và tự phục hồi dữ liệu qua Outbox Pattern.
+        - [x] Viết API giả lập Race Condition: Tiếp nhận số lượng Thread (ví dụ: 10, 50, 100) và số tiền chuyển để bắn đồng thời nhiều luồng gọi API chuyển khoản.
+        - [x] Viết API Chaos Simulator: Ngắt kết nối tạm thời Redis/Kafka/Notification để kiểm thử khả năng chịu lỗi và tự phục hồi dữ liệu qua Outbox Pattern.
     - **Backend (Operational)**:
-        - [ ] Viết các Dockerfile đa tầng cho các microservices Java và ứng dụng Frontend Node.
-        - [ ] Viết tệp cấu hình `docker-compose.prod.yml` chạy giới hạn cứng tài nguyên (CPU/RAM limit) cho PostgreSQL, Redis, Kafka và các microservices.
+        - [x] Viết các Dockerfile đa tầng cho các microservices Java và ứng dụng Frontend Node.
+        - [x] Viết tệp cấu hình `docker-compose.prod.yml` chạy giới hạn cứng tài nguyên (CPU/RAM limit) cho PostgreSQL, Redis, Kafka và các microservices.
     - **Frontend (UI)**:
-        - [ ] Thiết kế màn hình **Race Condition Simulator**: Cấu hình Threads, Amount, nút Start, hiển thị số giao dịch Success/Failed và đối soát tính chính xác của số dư cuối cùng.
-        - [ ] Thiết kế **Chaos & Recovery Dashboard**: Mô phỏng lỗi tắt/bật Redis/Kafka/Notification, hiển thị trực quan các giao dịch bị Pending hoặc Outbox đang xếp hàng retry. Bấm nút "Recover" để bật lại dịch vụ và xem luồng giao dịch được tiếp tục và hoàn tất tự động.
-        - [ ] Thiết kế **Admin Dashboard** & **User Detail**: Quản lý người dùng, ví và thực hiện hành động Đóng băng/Mở băng (Freeze/Unfreeze) ví trực tiếp trên giao diện.
+        - [x] Thiết kế màn hình **Race Condition Simulator**: Cấu hình Threads, Amount, nút Start, hiển thị số giao dịch Success/Failed và đối soát tính chính xác của số dư cuối cùng.
+        - [x] Thiết kế **Chaos & Recovery Dashboard**: Mô phỏng lỗi tắt/bật Redis/Kafka/Notification, hiển thị trực quan các giao dịch bị Pending hoặc Outbox đang xếp hàng retry. Bấm nút "Recover" để bật lại dịch vụ và xem luồng giao dịch được tiếp tục và hoàn tất tự động.
+        - [x] Thiết kế **Admin Dashboard** & **User Detail**: Quản lý người dùng, ví và thực hiện hành động Đóng băng/Mở băng (Freeze/Unfreeze) ví trực tiếp trên giao diện.

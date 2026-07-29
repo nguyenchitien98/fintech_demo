@@ -19,6 +19,9 @@ import java.util.List;
 @Component
 public class OutboxPoller {
 
+    /** Biến flag giả lập Broker Kafka mất kết nối (dùng cho Chaos Simulator). */
+    public static volatile boolean isKafkaOffline = false;
+
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -44,6 +47,12 @@ public class OutboxPoller {
     @Scheduled(fixedDelay = 5000)
     @Transactional
     public void pollOutboxEvents() {
+        // Kiểm tra xem có đang giả lập ngắt kết nối Kafka Broker không
+        if (isKafkaOffline) {
+            System.out.println(">>> [Chaos Simulator] Mô phỏng lỗi: Broker Kafka OFFLINE. Hàng đợi Outbox đang tích luỹ...");
+            return;
+        }
+
         // 1. Quét toàn bộ sự kiện có trạng thái PENDING
         List<OutboxEvent> pendingEvents = outboxEventRepository.findByStatus("PENDING");
         
