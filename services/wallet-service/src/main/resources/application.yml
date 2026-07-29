@@ -9,6 +9,12 @@ spring:
     virtual:
       enabled: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
   datasource:
     url: jdbc:postgresql://localhost:5432/mini_wallet
     username: postgres

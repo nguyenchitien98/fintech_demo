@@ -70,12 +70,12 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Tích hợp Apache Kafka để truyền phát sự kiện giao dịch bất đồng bộ, áp dụng Outbox Pattern để tăng tính bền bỉ và tạo giao diện lịch sử.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Thiết lập Apache Kafka Docker và cấu hình Kafka Producer trong `wallet-service`.
-        - [ ] Áp dụng Transactional Outbox Pattern: Khi viết dữ liệu Ledger vào Postgres, đồng thời ghi sự kiện `TransactionCompletedEvent` vào bảng `outbox_events` trong cùng một transaction database.
-        - [ ] Viết bộ quét Outbox (Scheduler) đọc bảng và bắn message vào Kafka Topic `transaction-events`.
+        - [x] Thiết lập Apache Kafka Docker và cấu hình Kafka Producer trong `wallet-service`.
+        - [x] Áp dụng Transactional Outbox Pattern: Khi viết dữ liệu Ledger vào Postgres, đồng thời ghi sự kiện `TransactionCompletedEvent` vào bảng `outbox_events` trong cùng một transaction database.
+        - [x] Viết bộ quét Outbox (Scheduler) đọc bảng và bắn message vào Kafka Topic `transaction-events`.
     - **Frontend (UI)**:
-        - [ ] Thiết kế màn hình **Lịch sử giao dịch (Transaction History)**:
-            - Bảng dữ liệu chứa thông tin Date & Time, Transaction ID, Type, Amount, Status, Channel.
+        - [x] Thiết kế màn hình **Lịch sử giao dịch (Transaction History)**:
+            - [x] Bảng dữ liệu chứa thông tin Date & Time, Transaction ID, Type, Amount, Status, Channel.
             - Các bộ lọc theo Status (Success, Pending, Failed), Type, khoảng thời gian và ô tìm kiếm nhanh.
             - Tích hợp nút xuất báo cáo **Export CSV**.
 

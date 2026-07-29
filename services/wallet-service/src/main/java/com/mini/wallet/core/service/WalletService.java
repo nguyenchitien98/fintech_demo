@@ -1,5 +1,6 @@
 package com.mini.wallet.core.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.wallet.common.exception.BusinessException;
 import com.mini.wallet.common.exception.ErrorCode;
 import com.mini.wallet.core.dto.LedgerResponseDto;
@@ -8,9 +9,11 @@ import com.mini.wallet.core.dto.TransferResponseDto;
 import com.mini.wallet.core.dto.WalletCreateDto;
 import com.mini.wallet.core.dto.WalletResponseDto;
 import com.mini.wallet.core.entity.LedgerEntry;
+import com.mini.wallet.core.entity.OutboxEvent;
 import com.mini.wallet.core.entity.Transaction;
 import com.mini.wallet.core.entity.Wallet;
 import com.mini.wallet.core.repository.LedgerEntryRepository;
+import com.mini.wallet.core.repository.OutboxEventRepository;
 import com.mini.wallet.core.repository.TransactionRepository;
 import com.mini.wallet.core.repository.WalletRepository;
 import org.springframework.data.domain.Page;
@@ -19,11 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Lớp xử lý nghiệp vụ quản lý ví điện tử, sổ cái Ledger và giao dịch chuyển tiền (Wallet Core Service).
+ * Tích hợp lưu trữ sự kiện outbox để đồng bộ Kafka bất đồng bộ bền bỉ.
  *
  * <p><strong>Tại sao sử dụng @Service:</strong> Annotation này đánh dấu lớp là một Spring Service Bean,
  * đóng vai trò cung cấp các logic xử lý nghiệp vụ ví lõi cho ứng dụng, hỗ trợ tiêm phụ thuộc tự động.
@@ -34,6 +40,9 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
+    private final OutboxEventRepository outboxEventRepository;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Khởi tạo WalletService thông qua Constructor Injection để tiêm các repositories.
@@ -41,13 +50,16 @@ public class WalletService {
      * @param walletRepository Repository quản lý tương tác dữ liệu bảng wallets.
      * @param transactionRepository Repository quản lý bảng transactions.
      * @param ledgerEntryRepository Repository quản lý bảng ledger_entries.
+     * @param outboxEventRepository Repository quản lý bảng outbox_events.
      */
     public WalletService(WalletRepository walletRepository,
                          TransactionRepository transactionRepository,
-                         LedgerEntryRepository ledgerEntryRepository) {
+                         LedgerEntryRepository ledgerEntryRepository,
+                         OutboxEventRepository outboxEventRepository) {
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
+        this.outboxEventRepository = outboxEventRepository;
     }
 
     /**
@@ -121,7 +133,7 @@ public class WalletService {
      * và khóa bi quan để phòng race condition và deadlock.
      *
      * <p><strong>Tại sao sử dụng @Transactional:</strong> Annotation này đảm bảo toàn bộ luồng xử lý
-     * (Select ví, trừ tiền ví gửi, cộng tiền ví nhận, tạo transaction, tạo ledger entries) đều nằm
+     * (Select ví, trừ tiền ví gửi, cộng tiền ví nhận, tạo transaction, tạo ledger entries, ghi outbox) đều nằm
      * trong một Database Transaction duy nhất. Nếu xảy ra bất kỳ lỗi runtime nào, toàn bộ dữ liệu sẽ
      * được Rollback hoàn hảo, ngăn chặn lỗi thất thoát tiền tệ.
      *
@@ -196,6 +208,33 @@ public class WalletService {
         creditEntry.setType("CREDIT");
         creditEntry.setAmount(amount);
         ledgerEntryRepository.save(creditEntry);
+
+        // 8. Mô hình Transactional Outbox Pattern: Tạo và lưu sự kiện chuyển tiền vào cơ sở dữ liệu
+        try {
+            Map<String, Object> eventPayload = new HashMap<>();
+            eventPayload.put("transactionId", tx.getId());
+            eventPayload.put("fromWalletId", fromId);
+            eventPayload.put("toWalletId", toId);
+            eventPayload.put("amount", amount);
+            eventPayload.put("status", tx.getStatus());
+            eventPayload.put("description", tx.getDescription());
+            eventPayload.put("reference", tx.getReference());
+            eventPayload.put("createdAt", tx.getCreatedAt().toString());
+
+            String payloadJson = objectMapper.writeValueAsString(eventPayload);
+
+            OutboxEvent outboxEvent = new OutboxEvent();
+            outboxEvent.setAggregateType("WALLET_TRANSACTION");
+            outboxEvent.setAggregateId(tx.getId().toString());
+            outboxEvent.setEventType("TRANSACTION_COMPLETED");
+            outboxEvent.setPayload(payloadJson);
+            outboxEvent.setStatus("PENDING");
+
+            outboxEventRepository.save(outboxEvent);
+        } catch (Exception e) {
+            // Không rollback transaction ví nếu gặp lỗi convert JSON (để đảm bảo tính sẵn sàng tối đa)
+            System.err.println(">>> [Outbox Error] Không thể lưu sự kiện Outbox: " + e.getMessage());
+        }
 
         return new TransferResponseDto(
             tx.getId(),

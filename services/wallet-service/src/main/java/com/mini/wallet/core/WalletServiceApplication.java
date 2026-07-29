@@ -2,6 +2,7 @@ package com.mini.wallet.core;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Lớp khởi chạy ứng dụng Spring Boot cho Wallet Core Service (Dịch vụ Ví điện tử lõi).
@@ -14,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
     "com.mini.wallet.core",
     "com.mini.wallet.common.exception" // Quét cả GlobalExceptionHandler từ common-library
 })
+@EnableScheduling
 public class WalletServiceApplication {
 
     /**

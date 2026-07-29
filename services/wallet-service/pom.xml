@@ -58,6 +58,12 @@
             <artifactId>common-library</artifactId>
         </dependency>
 
+        <!-- Spring Kafka for messaging -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Spring Boot Starter Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
