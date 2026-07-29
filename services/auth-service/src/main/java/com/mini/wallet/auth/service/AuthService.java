@@ -1,82 +1,93 @@
 package com.mini.wallet.auth.service;
 
+import com.mini.wallet.auth.dto.LoginRequestDto;
+import com.mini.wallet.auth.dto.LoginResponseDto;
 import com.mini.wallet.auth.dto.UserRegisterDto;
 import com.mini.wallet.auth.dto.UserResponseDto;
+import com.mini.wallet.auth.dto.VerifyOtpDto;
 import com.mini.wallet.auth.entity.User;
 import com.mini.wallet.auth.repository.UserRepository;
 import com.mini.wallet.common.exception.BusinessException;
 import com.mini.wallet.common.exception.ErrorCode;
+import com.mini.wallet.common.security.JwtUtils;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
- * Lớp dịch vụ xử lý nghiệp vụ xác thực và quản lý tài khoản người dùng (Auth Service Implementation).
+ * Lớp dịch vụ xử lý các nghiệp vụ xác thực tài khoản, 2FA OTP, JWT và logout (Auth Service).
  *
- * <p><strong>Tại sao sử dụng @Service:</strong> Annotation này đánh dấu đây là một Spring Service Bean
- * chứa logic nghiệp vụ cốt lõi của ứng dụng, giúp Spring tự động phát hiện, quản lý vòng đời và tiêm
- * các phụ thuộc (Dependency Injection).
+ * <p><strong>Tại sao sử dụng @Service:</strong> Đánh dấu đây là Spring Service Component
+ * quản lý toàn bộ nghiệp vụ an ninh của dự án.
  */
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final JwtUtils jwtUtils;
 
     @Value("${app.services.wallet-url}")
     private String walletServiceUrl;
 
     /**
-     * Khởi tạo AuthService thông qua cơ chế Inject constructor của Spring.
+     * Khởi tạo AuthService và tiêm tất cả các dependencies bảo mật cần thiết.
      *
      * @param userRepository Repository quản lý bảng users.
-     * @param restTemplate RestTemplate dùng để gọi API nội bộ sang các dịch vụ khác.
+     * @param restTemplate RestTemplate gọi API ví.
+     * @param passwordEncoder Đối tượng băm mật khẩu.
+     * @param redisTemplate Cache lưu trữ OTP/Blacklist.
+     * @param jwtUtils Tiện ích sinh giải mã JWT.
      */
-    public AuthService(UserRepository userRepository, RestTemplate restTemplate) {
+    public AuthService(UserRepository userRepository, 
+                       RestTemplate restTemplate, 
+                       PasswordEncoder passwordEncoder,
+                       RedisTemplate<String, Object> redisTemplate,
+                       JwtUtils jwtUtils) {
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
+        this.passwordEncoder = passwordEncoder;
+        this.redisTemplate = redisTemplate;
+        this.jwtUtils = jwtUtils;
     }
 
     /**
-     * Thực hiện nghiệp vụ đăng ký người dùng mới và tự động mở Ví mặc định tương ứng.
+     * Thực hiện nghiệp vụ đăng ký người dùng mới.
      *
-     * <p><strong>Tại sao sử dụng @Transactional:</strong> Annotation này bao bọc toàn bộ quá trình
-     * đăng ký trong một Transaction của cơ sở dữ liệu. Nếu việc lưu thông tin tài khoản thành công
-     * nhưng khâu gọi API tạo ví sang wallet-service bị thất bại (ném ngoại lệ), transaction này sẽ
-     * tự động bị ROLLBACK để đảm bảo tính toàn vẹn dữ liệu giữa hai dịch vụ (tránh việc có tài khoản
-     * người dùng nhưng không có ví).
-     *
-     * @param registerDto DTO chứa thông tin email và password.
-     * @return UserResponseDto chứa thông tin người dùng đã tạo.
-     * @throws BusinessException nếu email đã tồn tại hoặc gặp lỗi kết nối wallet-service.
+     * <p><strong>Tại sao dùng passwordEncoder.encode:</strong> Tuyệt đối không bao giờ được lưu mật khẩu
+     * thô của người dùng dưới DB để tránh rò rỉ thông tin khi database bị tấn công. BCrypt được sử dụng
+     * để băm mật khẩu một chiều đi kèm salt ngẫu nhiên.
      */
     @Transactional
     public UserResponseDto register(UserRegisterDto registerDto) {
-        // 1. Kiểm tra sự tồn tại của email
         if (userRepository.existsByEmail(registerDto.email())) {
             throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
-        // 2. Tạo thực thể người dùng mới và lưu vào DB (Mật khẩu ở Sprint 1 được lưu thô đơn giản)
         User user = new User();
         user.setEmail(registerDto.email());
-        user.setPassword(registerDto.password()); // TODO: Sẽ tích hợp Spring Security mã hóa ở Sprint 3
+        user.setPassword(passwordEncoder.encode(registerDto.password())); // Mã hóa BCrypt mật khẩu
         user = userRepository.save(user);
 
-        // 3. Gọi API nội bộ sang wallet-service để tự động tạo ví mặc định
         try {
             createWalletForUser(user.getId());
         } catch (Exception ex) {
-            // Ném lỗi để kích hoạt rollback transaction
             throw new BusinessException(
                 ErrorCode.INTERNAL_SERVER_ERROR,
                 "Không thể mở ví điện tử mặc định cho tài khoản này. Đăng ký thất bại. Chi tiết: " + ex.getMessage()
@@ -84,6 +95,109 @@ public class AuthService {
         }
 
         return new UserResponseDto(user.getId(), user.getEmail(), user.getActive(), user.getCreatedAt());
+    }
+
+    /**
+     * Thực hiện nghiệp vụ đăng nhập Bước 1: Đối sánh mật khẩu và sinh mã OTP 2FA.
+     *
+     * <p><strong>Tại sao lưu OTP vào Redis:</strong> Redis có cấu trúc dạng in-memory cache cực nhanh
+     * và hỗ trợ thuộc tính TTL (Time To Live). Mã OTP được đặt thời hạn tự động huỷ sau 120 giây (2 phút)
+     * giúp tăng cường bảo mật và giải phóng bộ nhớ tự động mà không cần quét bảng DB thủ công.
+     *
+     * @param loginDto DTO chứa email và mật khẩu của người dùng.
+     * @return LoginResponseDto đánh dấu requires2fa=true để bắt chuyển hướng sang trang nhập OTP.
+     */
+    @Transactional(readOnly = true)
+    public LoginResponseDto login(LoginRequestDto loginDto) {
+        User user = userRepository.findByEmail(loginDto.email())
+            .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "Email hoặc mật khẩu không chính xác"));
+
+        if (!user.getActive()) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "Tài khoản của bạn đã bị khóa");
+        }
+
+        // Kiểm tra đối khớp mật khẩu băm BCrypt
+        if (!passwordEncoder.matches(loginDto.password(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Email hoặc mật khẩu không chính xác");
+        }
+
+        // Sinh ngẫu nhiên mã OTP 2FA gồm 6 số
+        String otp = String.format("%06d", new Random().nextInt(1000000));
+
+        // Lưu mã OTP vào Redis với thời gian sống 2 phút
+        String redisKey = "otp:user:" + user.getEmail();
+        redisTemplate.opsForValue().set(redisKey, otp, Duration.ofSeconds(120));
+
+        // In mã OTP ra log console của hệ thống để mô phỏng (dễ dàng lấy test)
+        System.out.println("=================================================");
+        System.out.println(">>> [2FA OTP] MÃ XÁC THỰC CỦA " + user.getEmail() + " LÀ: " + otp);
+        System.out.println("=================================================");
+
+        return LoginResponseDto.requires2fa(user.getEmail());
+    }
+
+    /**
+     * Thực hiện nghiệp vụ đăng nhập Bước 2: Xác thực mã OTP 2FA và cấp phát JWT.
+     *
+     * @param verifyDto DTO chứa email và mã OTP người dùng gửi lên.
+     * @return LoginResponseDto chứa Access Token và Refresh Token.
+     */
+    public LoginResponseDto verifyOtp(VerifyOtpDto verifyDto) {
+        String email = verifyDto.email();
+        String otp = verifyDto.otp();
+
+        String redisKey = "otp:user:" + email;
+        String savedOtp = (String) redisTemplate.opsForValue().get(redisKey);
+
+        if (savedOtp == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Mã OTP đã hết hạn hoặc không tồn tại, vui lòng đăng nhập lại");
+        }
+
+        if (!savedOtp.equals(otp)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Mã OTP không chính xác");
+        }
+
+        // Xác thực thành công -> Xóa mã OTP trên Redis
+        redisTemplate.delete(redisKey);
+
+        // Sinh cặp JWT tokens
+        String accessToken = jwtUtils.generateAccessToken(email);
+        String refreshToken = jwtUtils.generateRefreshToken(email);
+
+        return LoginResponseDto.success(email, accessToken, refreshToken);
+    }
+
+    /**
+     * Thực hiện đăng xuất người dùng: Thu hồi Access Token hiện tại.
+     *
+     * <p><strong>Tại sao dùng Redis Blacklist:</strong> Vì JWT mang tính chất stateless (không lưu trạng thái ở server),
+     * không thể vô hiệu hóa trực tiếp token trước hạn. Do đó khi đăng xuất, ta lấy token đưa vào Redis Blacklist
+     * với TTL đúng bằng thời gian sống còn lại của token. Gateway sẽ kiểm tra blacklist này để chặn đứng truy cập.
+     *
+     * @param authorizationHeader Header Authorization chứa chuỗi JWT dạng Bearer.
+     */
+    public void logout(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return;
+        }
+
+        String token = authorizationHeader.substring(7);
+
+        try {
+            if (jwtUtils.validateToken(token)) {
+                Claims claims = jwtUtils.extractClaims(token);
+                long expirationTime = claims.getExpiration().getTime();
+                long remainingMs = expirationTime - System.currentTimeMillis();
+
+                // Đưa token vào Blacklist trên Redis nếu nó chưa hết hạn thực tế
+                if (remainingMs > 0) {
+                    String blacklistKey = "jwt:blacklist:" + token;
+                    redisTemplate.opsForValue().set(blacklistKey, "revoked", Duration.ofMillis(remainingMs));
+                }
+            }
+        } catch (Exception e) {
+            // Bỏ qua nếu token không đúng định dạng khi parse
+        }
     }
 
     /**
@@ -119,7 +233,6 @@ public class AuthService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
         
-        // Gọi API POST sang wallet-service
         restTemplate.postForEntity(url, request, Object.class);
     }
 }

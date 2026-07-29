@@ -14,15 +14,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Mô phỏng đăng nhập thành công ở Sprint 1
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:8081/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại.");
+      }
+
       setIsLoading(false);
-      router.push("/");
-    }, 1000);
+      
+      if (resData.data?.requires2fa) {
+        // Chuyển hướng sang trang OTP 2FA kèm email query param
+        router.push(`/otp?email=${encodeURIComponent(email)}`);
+      } else {
+        // Đăng nhập trực tiếp (nếu không bật 2FA, tuy nhiên hệ thống mặc định yêu cầu 2FA)
+        localStorage.setItem("accessToken", resData.data.accessToken);
+        localStorage.setItem("refreshToken", resData.data.refreshToken);
+        router.push("/");
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(err.message || "Không thể kết nối đến máy chủ xác thực.");
+    }
   };
 
   return (
@@ -38,6 +66,11 @@ export default function LoginPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg p-3 text-xs font-semibold text-center">
+            {error}
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</label>
           <input

@@ -52,6 +52,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Redis Starter for caching/blacklist -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Internal Common Library dependency -->
         <dependency>
             <groupId>com.mini.wallet</groupId>

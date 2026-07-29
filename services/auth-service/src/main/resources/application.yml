@@ -9,6 +9,11 @@ spring:
     virtual:
       enabled: true
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   datasource:
     url: jdbc:postgresql://localhost:5432/mini_auth
     username: postgres

@@ -41,12 +41,13 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Xây dựng hệ thống đăng nhập bảo mật cấp JWT Token, quản lý logout qua Redis và bảo mật 2 lớp OTP.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Phát triển độc lập `auth-service` xử lý đăng ký, đăng nhập và cấp phát cặp token (Access/Refresh Token).
-        - [ ] Tích hợp Redis làm Session Blacklist để thu hồi JWT khi người dùng đăng xuất.
-        - [ ] Viết API sinh và gửi mã OTP 2FA mô phỏng, và API xác thực OTP 6 số.
+        - [x] Phát triển các API xác thực (`POST /api/v1/auth/login`, `POST /api/v1/auth/verify-2fa`, `POST /api/v1/auth/logout`).
+        - [x] Tích hợp mã hóa mật khẩu bằng BCrypt, ngăn chặn lưu trữ bản rõ (plain text).
+        - [x] Tích hợp Redis làm kho lưu trữ mã OTP tạm thời (TTL 120s) và danh sách token đã đăng xuất (Blacklist).
+        - [x] Sử dụng thư viện `io.jsonwebtoken` (JJWT) để ký và giải mã JWT token.
     - **Frontend (UI)**:
-        - [ ] Hoàn thiện màn hình **Welcome Back (Login)**: Phong cách tối, card căn giữa, hỗ trợ OAuth nhanh qua Google/GitHub.
-        - [ ] Thiết kế màn hình **Two-Factor Authentication (2FA OTP)**: Nhận mã OTP 6 số, đếm ngược thời gian hết hạn mã (01:45) và nút Resend Code.
+        - [x] Thiết kế màn hình **Đăng nhập (Login Welcome Back)** kết nối API thực tế, nếu yêu cầu 2FA thì lưu tạm email và chuyển hướng sang trang OTP.
+        - [x] Thiết kế màn hình **OTP 2FA**: Cho phép người dùng nhập mã 6 số (tự nhảy ô focus), có đồng hồ đếm ngược (định dạng `02:00` giảm dần) và nút Resend Code. Khi verify thành công, lưu token vào `localStorage` và chuyển hướng về Dashboard.
 
 #### 🏃 Sprint 4: API Gateway, Rate Limiting & Idempotency Engine
 *   **Mục tiêu**: Bảo mật Gateway, giới hạn tần suất gọi API và thiết lập bộ lọc kháng lặp giao dịch tự động.
