@@ -1,0 +1,7 @@
+com\mini\wallet\auth\dto\UserRegisterDto.class
+com\mini\wallet\auth\dto\UserResponseDto.class
+com\mini\wallet\auth\AuthServiceApplication.class
+com\mini\wallet\auth\service\AuthService.class
+com\mini\wallet\auth\controller\AuthController.class
+com\mini\wallet\auth\entity\User.class
+com\mini\wallet\auth\repository\UserRepository.class

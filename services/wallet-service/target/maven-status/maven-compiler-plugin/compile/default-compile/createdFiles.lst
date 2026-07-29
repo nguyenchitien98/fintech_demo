@@ -1,0 +1,7 @@
+com\mini\wallet\core\dto\WalletResponseDto.class
+com\mini\wallet\core\repository\WalletRepository.class
+com\mini\wallet\core\controller\WalletController.class
+com\mini\wallet\core\dto\WalletCreateDto.class
+com\mini\wallet\core\service\WalletService.class
+com\mini\wallet\core\entity\Wallet.class
+com\mini\wallet\core\WalletServiceApplication.class

@@ -12,15 +12,15 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Thiết lập cơ sở dữ liệu Postgres, các thực thể JPA cho người dùng, ví và viết các API quản trị ví lõi.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Cấu hình JPA, Postgres cho thực thể `User` và `Wallet`.
-        - [ ] Viết Flyway migration tạo các bảng `users` và `wallets` trong cơ sở dữ liệu `mini_wallet` và `mini_auth`.
-        - [ ] Viết API Đăng ký người dùng và tự động mở Ví mặc định (Main Wallet) ở trạng thái `ACTIVE`.
-        - [ ] Viết các API cho ban quản trị: Lấy danh sách toàn bộ ví, danh sách người dùng phục vụ Admin Dashboard.
-        - [ ] Viết API Đóng băng/Mở băng ví (`/api/v1/wallets/{id}/freeze` và `/unfreeze`) phục vụ màn hình User Detail.
+        - [x] Cấu hình JPA, Postgres cho thực thể `User` và `Wallet`.
+        - [x] Viết Flyway migration tạo các bảng `users` và `wallets` trong cơ sở dữ liệu `mini_wallet` và `mini_auth`.
+        - [x] Viết API Đăng ký người dùng và tự động mở Ví mặc định (Main Wallet) ở trạng thái `ACTIVE`.
+        - [x] Viết các API cho ban quản trị: Lấy danh sách toàn bộ ví, danh sách người dùng phục vụ Admin Dashboard.
+        - [x] Viết API Đóng băng/Mở băng ví (`/api/v1/wallets/{id}/freeze` và `/unfreeze`) phục vụ màn hình User Detail.
     - **Frontend (UI)**:
-        - [ ] Khởi tạo dự án Next.js 15+, cấu hình Tailwind CSS và tích hợp thư viện Shadcn UI.
-        - [ ] Thiết kế khung giao diện chính với Sidebar điều hướng toàn cục (Dashboard, Wallets, Transactions, Transfer, Monitors, Simulator, Admin...).
-        - [ ] Xây dựng form Đăng ký / Đăng nhập cơ bản.
+        - [x] Khởi tạo dự án Next.js 15+, cấu hình Tailwind CSS và tích hợp thư viện Shadcn UI.
+        - [x] Thiết kế khung giao diện chính với Sidebar điều hướng toàn cục (Dashboard, Wallets, Transactions, Transfer, Monitors, Simulator, Admin...).
+        - [x] Xây dựng form Đăng ký / Đăng nhập cơ bản.
 
 #### 🏃 Sprint 2: Ledger Entries, Direct Money Transfer & Concurrency Control
 *   **Mục tiêu**: Xây dựng nghiệp vụ chuyển tiền áp dụng Sổ kế toán kép (Double-entry Ledger) bảo toàn dữ liệu và cơ chế chống rút tiền âm.
