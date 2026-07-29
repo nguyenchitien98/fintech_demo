@@ -99,15 +99,15 @@ Tài liệu này phân rã lộ trình phát triển hệ thống **Mini Digital
 *   **Mục tiêu**: Xây dựng các API giám sát sức khỏe hệ thống, logic phát hiện gian lận và thiết kế các bảng điều khiển trực quan.
 *   **Checklist kỹ thuật**:
     - **Backend (API)**:
-        - [ ] Viết API giám sát Kafka: Lấy danh sách các topic (`transaction-events`, `notification-events`, `dead-letter-topic`), số lượng partition, Lag, Consumers hoạt động và Offset hiện tại.
-        - [ ] Viết API giám sát Redis: Lấy các thông số dung lượng bộ nhớ (Memory Usage), số client kết nối, tỷ lệ Hit Rate, Ops/Sec, danh sách các khóa Idempotency đang lưu trữ (kèm TTL) và các Distributed Locks đang khóa.
-        - [ ] Cấu hình Spring Boot Actuator/Health check trả về trạng thái tròn (`🟢` - Healthy, `🟡` - Warning, `🔴` - Critical) của từng dịch vụ.
-        - [ ] Viết API Fraud Detection: Tính toán Risk Score dựa trên quy tắc (giao dịch vượt hạn mức, nhiều giao dịch liên tục) và trả về danh sách Alerts rủi ro.
+        - [x] Viết API giám sát Kafka: Lấy danh sách các topic (`transaction-events`, `notification-events`, `dead-letter-topic`), số lượng partition, Lag, Consumers hoạt động và Offset hiện tại.
+        - [x] Viết API giám sát Redis: Lấy các thông số dung lượng bộ nhớ (Memory Usage), số client kết nối, tỷ lệ Hit Rate, Ops/Sec, danh sách các khóa Idempotency đang lưu trữ (kèm TTL) và các Distributed Locks đang khóa.
+        - [x] Cấu hình Spring Boot Actuator/Health check trả về trạng thái tròn (`🟢` - Healthy, `🟡` - Warning, `🔴` - Critical) của từng dịch vụ.
+        - [x] Viết API Fraud Detection: Tính toán Risk Score dựa trên quy tắc (giao dịch vượt hạn mức, nhiều giao dịch liên tục) và trả về danh sách Alerts rủi ro.
     - **Frontend (UI)**:
-        - [ ] Thiết kế trang **Kafka Monitor**: Hiển thị bảng chi tiết các topic và biểu đồ Line Chart thống kê Messages In/Out per second theo thời gian thực.
-        - [ ] Thiết kế trang **Redis Dashboard**: Trực quan hóa dung lượng bộ nhớ, client, Ops/Sec và bảng danh sách các khóa Idempotency đang lưu trữ kèm TTL đếm ngược.
-        - [ ] Thiết kế trang **System Health**: Hiển thị đèn trạng thái hoạt động tròn của từng dịch vụ và lịch sử sự kiện hệ thống.
-        - [ ] Thiết kế trang **Fraud Detection**: Thống kê số lượng High/Medium/Low Risk, Doughnut Chart phân phối rủi ro và danh sách Alerts cảnh báo.
+        - [x] Thiết kế trang **Kafka Monitor**: Hiển thị bảng chi tiết các topic và biểu đồ Line Chart thống kê Messages In/Out per second theo thời gian thực.
+        - [x] Thiết kế trang **Redis Dashboard**: Trực quan hóa dung lượng bộ nhớ, client, Ops/Sec và bảng danh sách các khóa Idempotency đang lưu trữ kèm TTL đếm ngược.
+        - [x] Thiết kế trang **System Health**: Hiển thị đèn trạng thái hoạt động tròn của từng dịch vụ và lịch sử sự kiện hệ thống.
+        - [x] Thiết kế trang **Fraud Detection**: Thống kê số lượng High/Medium/Low Risk, Doughnut Chart phân phối rủi ro và danh sách Alerts cảnh báo.
 
 #### 🏃 Sprint 8: Chaos & Race Simulators, Admin Dashboard UI & Production Package
 *   **Mục tiêu**: Xây dựng bộ giả lập tải/lỗi hệ thống để demo khả năng chịu tải, giao diện Admin quản trị và đóng gói Docker Compose sản xuất.
